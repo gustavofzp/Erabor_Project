@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Integrações — ERP Municipal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --border: #1e2d40;
+    --internal: #3b82f6;
+    --external: #f97316;
+    --node-sec: #1e3a5f;
+    --node-ext: #3d1f0a;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --accent: #60a5fa;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  header p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .legend-line {
+    width: 24px; height: 2px;
+    border-radius: 2px;
+  }
+
+  #graph-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .node-secretaria circle {
+    stroke-width: 2px;
+    cursor: pointer;
+    transition: r 0.2s;
+    filter: drop-shadow(0 0 8px rgba(59,130,246,0.3));
+  }
+
+  .node-external circle {
+    stroke-width: 1.5px;
+    cursor: pointer;
+    filter: drop-shadow(0 0 6px rgba(249,115,22,0.3));
+  }
+
+  .node text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: var(--bg);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  .link-internal {
+    stroke: var(--internal);
+    stroke-opacity: 0.35;
+    stroke-width: 1.5px;
+    fill: none;
+  }
+
+  .link-external {
+    stroke: var(--external);
+    stroke-opacity: 0.35;
+    stroke-width: 1px;
+    stroke-dasharray: 4 3;
+    fill: none;
+  }
+
+  .link-internal.highlighted, .link-external.highlighted {
+    stroke-opacity: 1;
+    stroke-width: 2.5px;
+  }
+
+  .node-secretaria.highlighted circle {
+    filter: drop-shadow(0 0 16px rgba(59,130,246,0.8));
+  }
+
+  .node-external.highlighted circle {
+    filter: drop-shadow(0 0 12px rgba(249,115,22,0.8));
+  }
+
+  /* Tooltip */
+  #tooltip {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 280px;
+    z-index: 100;
+    line-height: 1.6;
+  }
+
+  #tooltip h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--accent);
+  }
+
+  #tooltip .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.62rem;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  #tooltip .tag.sec { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  #tooltip .tag.ext { background: rgba(249,115,22,0.2); color: #fdba74; }
+
+  #tooltip ul {
+    list-style: none;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  #tooltip ul li::before {
+    content: '→ ';
+    color: var(--accent);
+  }
+
+  .controls {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .filter-bar {
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .filter-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active-internal { border-color: var(--internal); color: #93c5fd; background: rgba(59,130,246,0.1); }
+  .filter-btn.active-external { border-color: var(--external); color: #fdba74; background: rgba(249,115,22,0.1); }
+  .filter-btn.active-all { border-color: var(--accent); color: var(--accent); background: rgba(96,165,250,0.1); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Mapa de Integrações — ERP Municipal</h1>
+    <p>Secretarias municipais · integrações internas e sistemas externos</p>
+  </div>
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#3b82f6; border: 2px solid #60a5fa;"></div>
+      <span>Secretaria</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#92400e; border: 2px solid #f97316;"></div>
+      <span>Sistema Externo</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="background:#3b82f6;"></div>
+      <span>Int. Interna</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="background:#f97316; border-top: 2px dashed #f97316; height:0;"></div>
+      <span>Int. Externa</span>
+    </div>
+  </div>
+</header>
+
+<div id="graph-container">
+  <div class="filter-bar">
+    <button class="filter-btn active-all" id="btn-all" onclick="setFilter('all')">Tudo</button>
+    <button class="filter-btn" id="btn-internal" onclick="setFilter('internal')">Internas</button>
+    <button class="filter-btn" id="btn-external" onclick="setFilter('external')">Externas</button>
+  </div>
+  <svg id="svg"></svg>
+  <div id="tooltip"></div>
+  <div class="controls">
+    <button class="btn" onclick="resetZoom()">Resetar Zoom</button>
+  </div>
+</div>
+
+<script>
+const secretarias = [
+  {
+    id: "financas", label: "Finanças", short: "FIN",
+    desc: "Contabilidade pública, orçamento, tesouraria, LRF",
+    internas: ["administracao","obras","saude","educacao","assistencia","tributacao"],
+    externas: ["siconfi","siope","siops","tce","banco"]
+  },
+  {
+    id: "administracao", label: "Administração", short: "ADM",
+    desc: "RH, folha de pagamento, licitações, patrimônio, almoxarifado",
+    internas: ["financas","obras","saude","educacao"],
+    externas: ["esocial","pncp","siape","receita"]
+  },
+  {
+    id: "tributacao", label: "Tributação", short: "TRB",
+    desc: "IPTU, ISS, ITBI, taxas, dívida ativa, notas fiscais",
+    internas: ["financas","assistencia"],
+    externas: ["receita","nfse","sigtap","banco"]
+  },
+  {
+    id: "saude", label: "Saúde", short: "SAÚ",
+    desc: "UBSs, vigilância, farmácia, SISAB, regulação",
+    internas: ["financas","administracao","assistencia"],
+    externas: ["sus","sisab","siops","rnds","cnes"]
+  },
+  {
+    id: "educacao", label: "Educação", short: "EDU",
+    desc: "Escolas, matrículas, merenda, transporte escolar, FUNDEB",
+    internas: ["financas","administracao","assistencia"],
+    externas: ["siope","censo_escolar","fnde","pnae"]
+  },
+  {
+    id: "assistencia", label: "Assistência Social", short: "ASS",
+    desc: "CRAS, CadÚnico, benefícios, SUAS, proteção social",
+    internas: ["saude","educacao","financas","tributacao"],
+    externas: ["cadunico","suas","mds","cnis"]
+  },
+  {
+    id: "obras", label: "Obras e Urbanismo", short: "OBR",
+    desc: "Licenças, alvarás, obras públicas, contratos, fiscalização",
+    internas: ["financas","administracao","meioambiente"],
+    externas: ["pncp","crea","inmet","cartorio"]
+  },
+  {
+    id: "meioambiente", label: "Meio Ambiente", short: "M.A.",
+    desc: "Licenciamento ambiental, fiscalização, arborização",
+    internas: ["obras","tributacao"],
+    externas: ["ibama","sisnama","inmet","ana"]
+  },
+  {
+    id: "transporte", label: "Transporte e Trânsito", short: "TRA",
+    desc: "Frota municipal, transporte público, vias, DETRAN",
+    internas: ["financas","administracao"],
+    externas: ["detran","denatran","dnit","renavam"]
+  },
+  {
+    id: "gabinete", label: "Gabinete / Controladoria", short: "GAB",
+    desc: "Protocolo, transparência, controle interno, ouvidoria",
+    internas: ["financas","administracao","saude","educacao","obras"],
+    externas: ["tce","cgu","lai","diario_oficial"]
+  }
+];
+
+const externais = [
+  { id: "siconfi", label: "SICONFI", desc: "Sist. de Informações Contábeis — STN" },
+  { id: "siope", label: "SIOPE", desc: "Sist. de Informações sobre Orçamentos Públicos em Educação" },
+  { id: "siops", label: "SIOPS", desc: "Sist. de Informações sobre Orçamentos Públicos em Saúde" },
+  { id: "tce", label: "TCE", desc: "Tribunal de Contas do Estado" },
+  { id: "banco", label: "Bancos", desc: "CEF, BB — pagamentos, conciliação bancária" },
+  { id: "esocial", label: "eSocial", desc: "Obrigações trabalhistas e previdenciárias" },
+  { id: "pncp", label: "PNCP", desc: "Portal Nacional de Contratações Públicas" },
+  { id: "siape", label: "SIAPE", desc: "Sist. de Administração de Pessoal do Setor Público" },
+  { id: "receita", label: "Receita Federal", desc: "CNPJ, CPF, DIRF, DCTF" },
+  { id: "nfse", label: "NFS-e Nacional", desc: "Nota Fiscal de Serviço Eletrônica" },
+  { id: "sigtap", label: "SIGTAP", desc: "Sist. de Gerenciamento da Tabela de Procedimentos SUS" },
+  { id: "sus", label: "SUS / MS", desc: "Ministério da Saúde, produção ambulatorial" },
+  { id: "sisab", label: "SISAB", desc: "Sist. de Informação em Saúde para a Atenção Básica" },
+  { id: "rnds", label: "RNDS", desc: "Rede Nacional de Dados em Saúde" },
+  { id: "cnes", label: "CNES", desc: "Cadastro Nacional de Estabelecimentos de Saúde" },
+  { id: "censo_escolar", label: "Censo Escolar", desc: "INEP — levantamento da educação básica" },
+  { id: "fnde", label: "FNDE", desc: "Fundo Nacional de Desenvolvimento da Educação" },
+  { id: "pnae", label: "PNAE", desc: "Programa Nacional de Alimentação Escolar" },
+  { id: "cadunico", label: "CadÚnico", desc: "Cadastro Único de Programas Sociais do Governo Federal" },
+  { id: "suas", label: "SUAS / SNAS", desc: "Sistema Único de Assistência Social" },
+  { id: "mds", label: "MDS", desc: "Ministério do Desenvolvimento e Assistência Social" },
+  { id: "cnis", label: "CNIS", desc: "Cadastro Nacional de Informações Sociais" },
+  { id: "crea", label: "CREA/CAU", desc: "Conselho de Engenharia e Arquitetura — ARTs/RRTs" },
+  { id: "inmet", label: "INMET", desc: "Instituto Nacional de Meteorologia" },
+  { id: "cartorio", label: "Cartório/SREI", desc: "Registro de imóveis e escrituras" },
+  { id: "ibama", label: "IBAMA/SEMA", desc: "Licenciamento ambiental federal/estadual" },
+  { id: "sisnama", label: "SISNAMA", desc: "Sist. Nacional do Meio Ambiente" },
+  { id: "ana", label: "ANA", desc: "Agência Nacional de Águas" },
+  { id: "detran", label: "DETRAN", desc: "Departamento Estadual de Trânsito" },
+  { id: "denatran", label: "SENATRAN", desc: "Secretaria Nacional de Trânsito" },
+  { id: "dnit", label: "DNIT", desc: "Departamento Nacional de Infraestrutura de Transportes" },
+  { id: "renavam", label: "RENAVAM", desc: "Registro Nacional de Veículos Automotores" },
+  { id: "tce2", label: "TCE", desc: "Tribunal de Contas — controle externo" },
+  { id: "cgu", label: "CGU", desc: "Controladoria-Geral da União" },
+  { id: "lai", label: "LAI / e-SIC", desc: "Lei de Acesso à Informação" },
+  { id: "diario_oficial", label: "Diário Oficial", desc: "Publicação oficial de atos administrativos" },
+];
+
+// deduplicate externais by id used
+const usedExtIds = new Set();
+secretarias.forEach(s => s.externas.forEach(e => usedExtIds.add(e)));
+const extFiltered = externais.filter(e => usedExtIds.has(e.id));
+
+const nodes = [
+  ...secretarias.map(s => ({ ...s, type: 'secretaria' })),
+  ...extFiltered.map(e => ({ ...e, type: 'external' }))
+];
+
+const links = [];
+// Internal links (deduplicated)
+const internalAdded = new Set();
+secretarias.forEach(s => {
+  s.internas.forEach(tid => {
+    const key = [s.id, tid].sort().join('--');
+    if (!internalAdded.has(key)) {
+      internalAdded.add(key);
+      links.push({ source: s.id, target: tid, type: 'internal' });
+    }
+  });
+});
+// External links
+secretarias.forEach(s => {
+  s.externas.forEach(eid => {
+    links.push({ source: s.id, target: eid, type: 'external' });
+  });
+});
+
+const svg = d3.select("#svg");
+const container = document.getElementById("graph-container");
+
+let width = container.clientWidth;
+let height = container.clientHeight;
+
+const g = svg.append("g");
+
+// Zoom
+const zoom = d3.zoom().scaleExtent([0.3, 3]).on("zoom", e => g.attr("transform", e.transform));
+svg.call(zoom);
+
+// Simulation
+const simulation = d3.forceSimulation(nodes)
+  .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.type === 'external' ? 140 : 110).strength(d => d.type === 'external' ? 0.4 : 0.7))
+  .force("charge", d3.forceManyBody().strength(d => d.type === 'secretaria' ? -600 : -200))
+  .force("center", d3.forceCenter(width / 2, height / 2))
+  .force("collision", d3.forceCollide().radius(d => d.type === 'secretaria' ? 52 : 38));
+
+// Draw links
+const link = g.append("g").selectAll("line")
+  .data(links).join("line")
+  .attr("class", d => d.type === 'internal' ? "link-internal" : "link-external");
+
+// Draw nodes
+const node = g.append("g").selectAll("g")
+  .data(nodes).join("g")
+  .attr("class", d => d.type === 'secretaria' ? "node node-secretaria" : "node node-external")
+  .call(d3.drag()
+    .on("start", dragstarted)
+    .on("drag", dragged)
+    .on("end", dragended))
+  .on("mouseover", showTooltip)
+  .on("mousemove", moveTooltip)
+  .on("mouseout", hideTooltip)
+  .on("click", highlightNode);
+
+// Circles
+node.append("circle")
+  .attr("r", d => d.type === 'secretaria' ? 38 : 22)
+  .attr("fill", d => d.type === 'secretaria' ? '#1a2f50' : '#2d1507')
+  .attr("stroke", d => d.type === 'secretaria' ? '#3b82f6' : '#f97316');
+
+// Short labels
+node.append("text")
+  .text(d => d.type === 'secretaria' ? d.short : d.label)
+  .attr("text-anchor", "middle")
+  .attr("dy", d => d.type === 'secretaria' ? "0.35em" : "0.35em")
+  .attr("fill", d => d.type === 'secretaria' ? '#93c5fd' : '#fdba74')
+  .attr("font-size", d => d.type === 'secretaria' ? "11px" : "8px")
+  .attr("font-weight", "700");
+
+// Full name below for secretarias
+node.filter(d => d.type === 'secretaria').append("text")
+  .text(d => d.label)
+  .attr("text-anchor", "middle")
+  .attr("dy", "52px")
+  .attr("fill", "#94a3b8")
+  .attr("font-size", "9px")
+  .attr("font-weight", "600")
+  .attr("stroke", "none");
+
+simulation.on("tick", () => {
+  link
+    .attr("x1", d => d.source.x)
+    .attr("y1", d => d.source.y)
+    .attr("x2", d => d.target.x)
+    .attr("y2", d => d.target.y);
+  node.attr("transform", d => `translate(${d.x},${d.y})`);
+});
+
+function dragstarted(event, d) {
+  if (!event.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragged(event, d) { d.fx = event.x; d.fy = event.y; }
+function dragended(event, d) {
+  if (!event.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+const tooltip = document.getElementById("tooltip");
+
+function showTooltip(event, d) {
+  let html = `<h3>${d.label}</h3>`;
+  if (d.type === 'secretaria') {
+    html += `<span class="tag sec">Secretaria Municipal</span><br>`;
+    html += `<span style="color:#94a3b8">${d.desc}</span>`;
+    if (d.internas?.length) {
+      html += `<br><br><strong style="color:#60a5fa">Integrações internas:</strong><ul>`;
+      d.internas.forEach(i => {
+        const sec = secretarias.find(s => s.id === i);
+        if (sec) html += `<li>${sec.label}</li>`;
+      });
+      html += `</ul>`;
+    }
+    if (d.externas?.length) {
+      html += `<br><strong style="color:#fb923c">Sistemas externos:</strong><ul>`;
+      d.externas.forEach(e => {
+        const ext = externais.find(x => x.id === e);
+        if (ext) html += `<li>${ext.label}</li>`;
+      });
+      html += `</ul>`;
+    }
+  } else {
+    html += `<span class="tag ext">Sistema Externo</span><br>`;
+    html += `<span style="color:#94a3b8">${d.desc}</span>`;
+  }
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = 1;
+}
+
+function moveTooltip(event) {
+  const rect = container.getBoundingClientRect();
+  let x = event.clientX - rect.left + 14;
+  let y = event.clientY - rect.top - 10;
+  if (x + 300 > width) x = event.clientX - rect.left - 300;
+  tooltip.style.left = x + "px";
+  tooltip.style.top = y + "px";
+}
+
+function hideTooltip() {
+  tooltip.style.opacity = 0;
+}
+
+let currentFilter = 'all';
+let selectedNode = null;
+
+function highlightNode(event, d) {
+  if (selectedNode === d.id) {
+    selectedNode = null;
+    resetHighlight();
+    return;
+  }
+  selectedNode = d.id;
+
+  const connectedIds = new Set([d.id]);
+  links.forEach(l => {
+    if (l.source.id === d.id) connectedIds.add(l.target.id);
+    if (l.target.id === d.id) connectedIds.add(l.source.id);
+  });
+
+  node.classed("highlighted", n => connectedIds.has(n.id));
+  node.selectAll("circle").attr("opacity", n => connectedIds.has(n.id) ? 1 : 0.15);
+  node.selectAll("text").attr("opacity", n => connectedIds.has(n.id) ? 1 : 0.1);
+
+  link.attr("opacity", l => {
+    const src = l.source.id || l.source;
+    const tgt = l.target.id || l.target;
+    return (src === d.id || tgt === d.id) ? 1 : 0.04;
+  });
+  link.classed("highlighted", l => {
+    const src = l.source.id || l.source;
+    const tgt = l.target.id || l.target;
+    return src === d.id || tgt === d.id;
+  });
+}
+
+function resetHighlight() {
+  node.classed("highlighted", false);
+  node.selectAll("circle").attr("opacity", 1);
+  node.selectAll("text").attr("opacity", 1);
+  applyFilter(currentFilter);
+}
+
+function applyFilter(filter) {
+  link.attr("opacity", l => {
+    if (filter === 'all') return 1;
+    if (filter === 'internal') return l.type === 'internal' ? 1 : 0.04;
+    if (filter === 'external') return l.type === 'external' ? 1 : 0.04;
+  });
+}
+
+function setFilter(filter) {
+  currentFilter = filter;
+  selectedNode = null;
+  resetHighlight();
+  document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn');
+  if (filter === 'all') document.getElementById('btn-all').classList.add('active-all');
+  if (filter === 'internal') document.getElementById('btn-internal').classList.add('active-internal');
+  if (filter === 'external') document.getElementById('btn-external').classList.add('active-external');
+}
+
+function resetZoom() {
+  svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+}
+
+window.addEventListener("resize", () => {
+  width = container.clientWidth;
+  height = container.clientHeight;
+  simulation.force("center", d3.forceCenter(width / 2, height / 2));
+  simulation.alpha(0.3).restart();
+});
+</script>
+</body>
+</html>
