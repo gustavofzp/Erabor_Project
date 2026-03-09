@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Municipal — Apresentações</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #0a0e17;
+      --surface: #111827;
+      --border: #1e2d40;
+      --accent: #60a5fa;
+      --text: #e2e8f0;
+      --text-dim: #64748b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+
+    header p {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+
+    .card-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .empty {
+      font-family: 'DM Mono', monospace;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    footer {
+      margin-top: 48px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Smart Cities</h1>
+    <p>Apresentação e documentação do projeto de Plataformas de Gestão de Cidades (City Operating Systems)</p>
+  </header>
+
+  <div class="grid">
+    {% for pagina in paginas %}
+    <a class="card" href="/{{ pagina }}">
+      <div class="card-icon">📄</div>
+      <div>
+        <div class="card-title">{{ pagina | replace('-', ' ') | replace('.html', '') | title }}</div>
+        <div class="card-sub">{{ pagina }}</div>
+      </div>
+    </a>
+    {% else %}
+    <p class="empty">Nenhuma página encontrada em <code>src/apresentacao/</code>.</p>
+    {% endfor %}
+  </div>
+
+  <footer>erabor_project · flask dev server</footer>
+
+</body>
+</html>
