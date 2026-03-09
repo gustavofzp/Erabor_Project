@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERABOR — ERP Municipal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --ink: #1a1a2e;
+  --ink-dim: #5a5a7a;
+  --blue: #1a3a5c;
+  --blue-mid: #2563eb;
+  --blue-light: #dbeafe;
+  --blue-pale: #eff6ff;
+  --orange: #c2410c;
+  --orange-light: #fef3c7;
+  --green: #15803d;
+  --green-light: #dcfce7;
+  --red-light: #fee2e2;
+  --border: #e2e0da;
+  --shadow: 0 4px 24px rgba(26,58,92,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.4;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(247,245,240,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: 56px;
+}
+
+.nav-brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: var(--blue);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.nav-links::-webkit-scrollbar { display: none; }
+
+.nav-link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--ink-dim);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+.nav-link:hover { background: var(--blue-light); color: var(--blue-mid); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 92vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-left {
+  background: var(--blue);
+  padding: 80px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.hero-left::after {
+  content: '';
+  position: absolute;
+  right: -60px;
+  top: 0;
+  bottom: 0;
+  width: 120px;
+  background: var(--blue);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+  z-index: 2;
+}
+
+.hero-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: #93c5fd;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3.5rem, 6vw, 6rem);
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: #bfdbfe;
+  font-weight: 300;
+  max-width: 420px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+}
+
+.hero-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.hero-stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.hero-right {
+  background: var(--bg);
+  padding: 80px 60px 80px 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.hero-intro-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--blue);
+  margin-bottom: 20px;
+}
+
+.hero-intro-text {
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.entity-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 32px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--blue-pale);
+  border: 1px solid var(--blue-light);
+  border-radius: 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--blue-mid);
+  font-weight: 500;
+}
+
+/* ── SECTION WRAPPER ── */
+.section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 40px;
+}
+
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--blue-mid);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  max-width: 60px;
+  height: 1px;
+  background: var(--blue-mid);
+  opacity: 0.4;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.section-desc {
+  color: var(--ink-dim);
+  max-width: 620px;
+  font-size: 0.95rem;
+  line-height: 1.75;
+  margin-bottom: 48px;
+}
+
+/* ── ENTITY MAP ── */
+#mapa { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+.entity-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.entity-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+.entity-table th {
+  background: var(--blue);
+  color: #ffffff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  padding: 14px 10px;
+  text-align: center;
+  white-space: nowrap;
+  position: sticky;
+  top: 56px;
+}
+
+.entity-table th:first-child {
+  text-align: left;
+  padding-left: 20px;
+}
+
+.entity-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.entity-table td:first-child {
+  text-align: left;
+  padding-left: 20px;
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.entity-table tr:last-child td { border-bottom: none; }
+.entity-table tr:nth-child(even) td { background: #fafaf8; }
+.entity-table tr:hover td { background: var(--blue-pale); }
+
+.check { color: var(--blue-mid); font-size: 1rem; font-weight: 700; }
+.dash { color: #d1d5db; font-size: 0.8rem; }
+
+/* ── MODULES GRID ── */
+#modulos { background: var(--bg); }
+
+.priority-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  padding: 8px 20px;
+  border-radius: 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+
+.filter-pill.active, .filter-pill:hover {
+  border-color: var(--blue-mid);
+  color: var(--blue-mid);
+  background: var(--blue-pale);
+}
+
+.filter-pill[data-p="Alta"].active { border-color: #dc2626; color: #dc2626; background: var(--red-light); }
+.filter-pill[data-p="Média"].active { border-color: var(--orange); color: var(--orange); background: var(--orange-light); }
+
+/* ── MACRO MODULE CARDS ── */
+.macro-card {
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  margin-bottom: 28px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.25s, transform 0.25s;
+  opacity: 0;
+}
+.macro-card.fade-up {
+  opacity: 1;
+  animation: fadeUp 0.5s ease both;
+}
+.macro-card:hover {
+  box-shadow: 0 8px 32px rgba(26,58,92,0.13);
+  transform: translateY(-2px);
+}
+.macro-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 28px 28px 20px;
+}
+.macro-icon {
+  width: 52px; height: 52px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.macro-info { flex: 1; }
+.macro-id {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.macro-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.macro-desc {
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  line-height: 1.65;
+}
+.macro-count {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  flex-shrink: 0;
+  opacity: 0.25;
+}
+.macro-count span {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 400;
+  text-align: center;
+  opacity: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.macro-divider {
+  height: 1px;
+  margin: 0 28px;
+}
+.sub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1px;
+  background: rgba(0,0,0,0.06);
+  margin: 16px 0 0;
+}
+.sub-item {
+  background: rgba(255,255,255,0.7);
+  padding: 16px 20px;
+  transition: background 0.15s;
+}
+.sub-item:hover { background: rgba(255,255,255,0.95); }
+.sub-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.sub-sigla {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+.sub-nome {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.sub-desc {
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  line-height: 1.55;
+  padding-left: 2px;
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
+}
+
+.module-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: transform 0.25s, box-shadow 0.25s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(26,58,92,0.14);
+}
+
+.module-card.hidden { display: none; }
+
+.card-header {
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-id {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--blue-mid);
+  background: var(--blue-pale);
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-top: 3px;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.priority-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  margin-top: 3px;
+}
+
+.p-alta { background: var(--red-light); color: #dc2626; }
+.p-media { background: var(--orange-light); color: var(--orange); }
+
+.card-body {
+  padding: 16px 24px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  line-height: 1.65;
+}
+
+.card-entities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.entity-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--blue-light);
+  color: var(--blue-mid);
+}
+
+/* Accordion inside card */
+.card-accordion { border-top: 1px solid var(--border); margin-top: 4px; }
+
+.acc-btn {
+  width: 100%;
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  transition: background 0.15s;
+}
+
+.acc-btn:hover { background: var(--bg); }
+
+.acc-btn.open { border-bottom-color: var(--border); }
+
+.acc-arrow {
+  transition: transform 0.25s;
+  font-size: 0.7rem;
+  color: var(--ink-dim);
+}
+.acc-btn.open .acc-arrow { transform: rotate(180deg); }
+
+.acc-content {
+  display: none;
+  padding: 14px 24px 16px;
+  background: #fafaf8;
+}
+.acc-content.open { display: block; }
+
+.acc-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.acc-list li {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.acc-list li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--blue-mid);
+  font-size: 0.75rem;
+}
+
+.acc-list.ext li::before { color: var(--orange); }
+
+.leg-tag {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  padding: 2px 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: var(--green);
+  border-radius: 4px;
+  margin: 2px 2px 2px 0;
+}
+
+/* ── ROADMAP ── */
+#roadmap { background: var(--blue); }
+#roadmap .section-title { color: #ffffff; }
+#roadmap .section-label { color: #93c5fd; }
+#roadmap .section-label::after { background: #93c5fd; }
+#roadmap .section-desc { color: #bfdbfe; }
+
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.roadmap-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 28px;
+  transition: background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.roadmap-card::before {
+  content: attr(data-num);
+  position: absolute;
+  right: 20px;
+  top: 16px;
+  font-family: 'Playfair Display', serif;
+  font-size: 4rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.06);
+  line-height: 1;
+}
+
+.roadmap-card:hover { background: rgba(255,255,255,0.1); }
+
+.roadmap-phase {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: #93c5fd;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.roadmap-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.roadmap-period {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: #60a5fa;
+  margin-bottom: 16px;
+}
+
+.roadmap-modules {
+  font-size: 0.82rem;
+  color: #bfdbfe;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.roadmap-obs {
+  font-size: 0.78rem;
+  color: rgba(191,219,254,0.7);
+  font-style: italic;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 12px;
+}
+
+/* ── INTEGRATIONS ── */
+#integracoes { background: var(--surface); border-top: 1px solid var(--border); }
+
+.int-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.int-column h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.int-column.internal h3 { color: var(--blue-mid); border-color: var(--blue-mid); }
+.int-column.external h3 { color: var(--orange); border-color: var(--orange); }
+
+.int-list { display: flex; flex-direction: column; gap: 8px; }
+
+.int-item {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.int-item.int { background: var(--blue-pale); color: var(--blue); border-left: 3px solid var(--blue-mid); }
+.int-item.ext { background: #fff7ed; color: #92400e; border-left: 3px solid var(--orange); }
+
+.int-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.int .int-dot { background: var(--blue-mid); }
+.ext .int-dot { background: var(--orange); }
+
+/* ── FOOTER ── */
+footer {
+  background: #0f1a2e;
+  color: #475569;
+  text-align: center;
+  padding: 32px 40px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+}
+
+footer strong { color: #93c5fd; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.hero-left > * { animation: fadeUp 0.7s ease both; }
+.hero-left > *:nth-child(1) { animation-delay: 0.1s; }
+.hero-left > *:nth-child(2) { animation-delay: 0.25s; }
+.hero-left > *:nth-child(3) { animation-delay: 0.4s; }
+.hero-left > *:nth-child(4) { animation-delay: 0.55s; }
+
+.hero-right > * { animation: fadeUp 0.7s ease both; }
+.hero-right > *:nth-child(1) { animation-delay: 0.5s; }
+.hero-right > *:nth-child(2) { animation-delay: 0.65s; }
+.hero-right > *:nth-child(3) { animation-delay: 0.8s; }
+.hero-right > *:nth-child(4) { animation-delay: 0.9s; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-left::after { display: none; }
+  .hero-left { padding: 60px 32px; }
+  .hero-right { padding: 48px 32px; }
+  .int-grid { grid-template-columns: 1fr; }
+  nav { padding: 0 20px; }
+  .section { padding: 56px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">ERABOR</a>
+  <div class="nav-links">
+    <a href="#resumo" class="nav-link">Resumo</a>
+    <a href="#mapa" class="nav-link">Mapa de Entidades</a>
+    <a href="#modulos" class="nav-link">Módulos</a>
+    <a href="#roadmap" class="nav-link">Roadmap</a>
+    <a href="#integracoes" class="nav-link">Integrações</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow">ERP Municipal · Versão 1.0 · 2025</div>
+    <h1 class="hero-title">ERA<br>BOR</h1>
+    <p class="hero-subtitle">Sistema integrado de gestão pública municipal — especificação completa de módulos, funcionalidades e integrações.</p>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num">28</div>
+        <div class="hero-stat-label">Módulos</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">9</div>
+        <div class="hero-stat-label">Entidades</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">4</div>
+        <div class="hero-stat-label">Fases</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-right">
+    <h2 class="hero-intro-title">Gestão pública integrada, do orçamento ao cidadão</h2>
+    <p class="hero-intro-text">O ERABOR foi concebido para atender à complexidade jurídica e operacional das prefeituras brasileiras, cobrindo desde a escrituração contábil obrigatória pela Lei 4.320/64 até o aplicativo mobile do cidadão.</p>
+    <p class="hero-intro-text">A especificação foi elaborada a partir da análise do sistema vigente do município-alvo, mapeando todas as obrigações legais, integrações com sistemas federais e estaduais, e oportunidades de modernização da gestão.</p>
+    <div class="entity-chips">
+      <span class="chip">🏛 Município</span>
+      <span class="chip">🌿 IMMA</span>
+      <span class="chip">🏖 Turismo</span>
+      <span class="chip">🏅 Esportes</span>
+      <span class="chip">🤝 Assistência Social</span>
+      <span class="chip">📚 Educação</span>
+      <span class="chip">🏥 Saúde</span>
+      <span class="chip">👶 FMDICA</span>
+    </div>
+  </div>
+</section>
+
+<!-- SUMÁRIO EXECUTIVO -->
+<section id="resumo">
+  <div class="section">
+    <div class="section-label">01 — Resumo Executivo</div>
+    <h2 class="section-title">Por que o ERABOR?</h2>
+    <p class="section-desc">O ERP Municipal unifica em uma única plataforma todas as obrigações legais e operacionais de uma prefeitura e suas entidades vinculadas.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; border-top: 4px solid #dc2626;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #dc2626; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">Prioridade Alta</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--blue);">13</div>
+        <div style="font-size: 0.85rem; color: var(--ink-dim); margin-top: 4px;">Módulos de compliance obrigatório — base legal e operacional do ERP</div>
+      </div>
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; border-top: 4px solid var(--orange);">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">Prioridade Média</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--blue);">15</div>
+        <div style="font-size: 0.85rem; color: var(--ink-dim); margin-top: 4px;">Módulos de gestão eficiente e modernização do atendimento público</div>
+      </div>
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; border-top: 4px solid var(--blue-mid);">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--blue-mid); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">Integrações Externas</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--blue);">40+</div>
+        <div style="font-size: 0.85rem; color: var(--ink-dim); margin-top: 4px;">Sistemas federais e estaduais: SICONFI, eSocial, PNCP, NFS-e, TCE e outros</div>
+      </div>
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; border-top: 4px solid var(--green);">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--green); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px;">Prazo de Implantação</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--blue);">24 meses</div>
+        <div style="font-size: 0.85rem; color: var(--ink-dim); margin-top: 4px;">4 fases de entrega incremental com go-live parcial desde a Fase 1</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAPA DE ENTIDADES -->
+<section id="mapa">
+  <div class="section">
+    <div class="section-label">02 — Mapa de Módulos</div>
+    <h2 class="section-title">Quais módulos por entidade</h2>
+    <p class="section-desc">Visualize quais módulos estão presentes em cada uma das 9 entidades do município. ✓ indica que a entidade utiliza o módulo.</p>
+
+    <div class="entity-table-wrap">
+      <table class="entity-table">
+        <thead>
+          <tr>
+            <th>Módulo</th>
+            <th>Município</th>
+            <th>IMMA</th>
+            <th>Turismo</th>
+            <th>Prev. Social</th>
+            <th>Esportes</th>
+            <th>Assist. Social</th>
+            <th>Educação</th>
+            <th>Saúde</th>
+            <th>FMDICA</th>
+          </tr>
+        </thead>
+        <tbody id="entity-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- MÓDULOS -->
+<section id="modulos">
+  <div class="section">
+    <div class="section-label">03 — Arquitetura de Módulos</div>
+    <h2 class="section-title">Módulos macro do sistema</h2>
+    <p class="section-desc">O ERABOR é organizado em 10 módulos macro, cada um agrupando os submódulos funcionais da respectiva área. Esta é a visão arquitetural da solução.</p>
+    <div id="modules-container"></div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section">
+    <div class="section-label">04 — Roadmap</div>
+    <h2 class="section-title">Plano de desenvolvimento em 4 fases</h2>
+    <p class="section-desc">Sequência baseada em dependências técnicas, criticidade legal e impacto para o cliente.</p>
+
+    <div class="roadmap-grid">
+      <div class="roadmap-card" data-num="1">
+        <div class="roadmap-phase">Fase 1</div>
+        <div class="roadmap-title">Core Financeiro</div>
+        <div class="roadmap-period">Meses 1 – 6</div>
+        <div class="roadmap-modules">Planejamento e Orçamento · Escrituração Contábil · Compras e Licitações · Controle de Contratos · Portal da Transparência</div>
+        <div class="roadmap-obs">Base obrigatória. Sem estes módulos a prefeitura não opera legalmente.</div>
+      </div>
+      <div class="roadmap-card" data-num="2">
+        <div class="roadmap-phase">Fase 2</div>
+        <div class="roadmap-title">RH e Tributação</div>
+        <div class="roadmap-period">Meses 7 – 12</div>
+        <div class="roadmap-modules">Pessoal e Folha · Ponto Eletrônico · Saúde Ocupacional · IPTU/ISS/ITBI · NFS-e · Arrecadação · Dívida Ativa</div>
+        <div class="roadmap-obs">Segunda prioridade por impacto direto na receita e nos servidores.</div>
+      </div>
+      <div class="roadmap-card" data-num="3">
+        <div class="roadmap-phase">Fase 3</div>
+        <div class="roadmap-title">Gestão Operacional</div>
+        <div class="roadmap-period">Meses 13 – 18</div>
+        <div class="roadmap-modules">Patrimônio · Almoxarifado · Frotas · Processo Digital · GED · Ouvidoria · Portal de Serviços · Estágio Probatório · Avaliação de Desempenho</div>
+        <div class="roadmap-obs">Moderniza a gestão e substitui processos em papel.</div>
+      </div>
+      <div class="roadmap-card" data-num="4">
+        <div class="roadmap-phase">Fase 4</div>
+        <div class="roadmap-title">Digital e Especializado</div>
+        <div class="roadmap-period">Meses 19 – 24</div>
+        <div class="roadmap-modules">App Mobile · Meio Ambiente · Fiscalização Fazendária · Simples Nacional · Domicílio Eletrônico · Procuradoria · Recrutamento e Seleção · Serviços Públicos</div>
+        <div class="roadmap-obs">Diferencial competitivo e atendimento a entidades específicas (IMMA).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTEGRAÇÕES -->
+<section id="integracoes">
+  <div class="section">
+    <div class="section-label">05 — Integrações</div>
+    <h2 class="section-title">Ecossistema de integrações</h2>
+    <p class="section-desc">O ERABOR se integra nativamente com os principais sistemas federais, estaduais e bancários exigidos pela legislação brasileira.</p>
+
+    <div class="int-grid">
+      <div class="int-column internal">
+        <h3>🔵 Integrações Internas</h3>
+        <div class="int-list">
+          <div class="int-item int"><div class="int-dot"></div>Contabilidade ↔ Orçamento (execução automática)</div>
+          <div class="int-item int"><div class="int-dot"></div>Folha de Pagamento ↔ Ponto Eletrônico</div>
+          <div class="int-item int"><div class="int-dot"></div>Compras ↔ Almoxarifado ↔ Patrimônio</div>
+          <div class="int-item int"><div class="int-dot"></div>Portal do Cidadão ↔ Processo Digital ↔ Ouvidoria</div>
+          <div class="int-item int"><div class="int-dot"></div>Tributação ↔ Dívida Ativa ↔ Procuradoria</div>
+          <div class="int-item int"><div class="int-dot"></div>NFS-e ↔ ISS ↔ Arrecadação</div>
+          <div class="int-item int"><div class="int-dot"></div>Estágio Probatório ↔ Avaliação de Desempenho ↔ Folha</div>
+          <div class="int-item int"><div class="int-dot"></div>Fiscalização ↔ Simples Nacional ↔ Escrita Fiscal</div>
+        </div>
+      </div>
+      <div class="int-column external">
+        <h3>🟠 Sistemas Externos</h3>
+        <div class="int-list">
+          <div class="int-item ext"><div class="int-dot"></div>SICONFI / STN — informações contábeis</div>
+          <div class="int-item ext"><div class="int-dot"></div>eSocial — obrigações trabalhistas e previdenciárias</div>
+          <div class="int-item ext"><div class="int-dot"></div>PNCP — Portal Nacional de Contratações Públicas</div>
+          <div class="int-item ext"><div class="int-dot"></div>NFS-e Nacional (SEFIN/RFB) — nota fiscal de serviços</div>
+          <div class="int-item ext"><div class="int-dot"></div>TCE Estadual — prestação de contas</div>
+          <div class="int-item ext"><div class="int-dot"></div>Receita Federal — CNPJ, CPF, DIRF, Simples Nacional</div>
+          <div class="int-item ext"><div class="int-dot"></div>SIOPE / SIOPS — orçamento educação e saúde</div>
+          <div class="int-item ext"><div class="int-dot"></div>Gov.br — autenticação única do cidadão</div>
+          <div class="int-item ext"><div class="int-dot"></div>Bancos (CEF/BB) — conciliação bancária e pagamentos</div>
+          <div class="int-item ext"><div class="int-dot"></div>SISAB / CNES / RNDS — saúde pública</div>
+          <div class="int-item ext"><div class="int-dot"></div>PJe / TJ Estadual — execução fiscal</div>
+          <div class="int-item ext"><div class="int-dot"></div>IBAMA / SISNAMA / ANA — meio ambiente</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>ERABOR</strong> — ERP Municipal · Especificação v1.0 · 2025 · Documento confidencial de uso interno
+</footer>
+
+<script>
+const modulosMacro = [
+  {
+    id: "FIN",
+    area: "Módulo Financeiro",
+    icon: "💰",
+    cor: "#1e40af",
+    bg: "#eff6ff",
+    desc: "Núcleo orçamentário e contábil do ERP. Base legal para toda a execução financeira do município e entidades vinculadas.",
+    submodulos: [
+      { nome: "Planejamento e Orçamento",         sigla: "PPA/LDO/LOA",   desc: "Elaboração e controle do ciclo orçamentário completo." },
+      { nome: "Escrituração Contábil",             sigla: "PCASP/MCASP",  desc: "Contabilidade pública, empenho, liquidação e pagamento." },
+      { nome: "Execução Financeira",               sigla: "EXF",          desc: "Tesouraria, fluxo de caixa e conciliação bancária." },
+      { nome: "Prestação de Contas",               sigla: "LRF/SICONFI",  desc: "Geração de RREO, RGF e envio ao SICONFI e TCE." },
+    ]
+  },
+  {
+    id: "ADM",
+    area: "Módulo Administrativo",
+    icon: "🏢",
+    cor: "#374151",
+    bg: "#f9fafb",
+    desc: "Gestão interna da máquina pública: pessoas, compras, bens e processos administrativos.",
+    submodulos: [
+      { nome: "Pessoal e Folha de Pagamento",      sigla: "RH/FOLHA",     desc: "Gestão de servidores, cálculo de folha e obrigações acessórias." },
+      { nome: "Ponto Eletrônico",                  sigla: "REP",          desc: "Controle de frequência e jornada com integração biométrica." },
+      { nome: "Saúde Ocupacional",                 sigla: "PCMSO/PGR",    desc: "PCMSO, PGR, ASO e gestão de afastamentos." },
+      { nome: "Estágio Probatório",                sigla: "EP",           desc: "Acompanhamento e avaliação do período probatório." },
+      { nome: "Avaliação de Desempenho",           sigla: "AVD",          desc: "Ciclos avaliativos e progressão na carreira." },
+      { nome: "Recrutamento e Seleção",            sigla: "R&S",          desc: "Concursos públicos, processos seletivos e posse." },
+      { nome: "Compras e Licitações",              sigla: "PNCP/LL",      desc: "Processos licitatórios conforme Lei 14.133/2021." },
+      { nome: "Controle de Contratos",             sigla: "CONT",         desc: "Ciclo de vida de contratos, aditivos e fiscalização." },
+      { nome: "Patrimônio",                        sigla: "PAT",          desc: "Bens móveis e imóveis, tombamento e depreciação." },
+      { nome: "Almoxarifado",                      sigla: "ALM",          desc: "Estoque de materiais de consumo e requisições." },
+    ]
+  },
+  {
+    id: "TRIB",
+    area: "Módulo Tributário",
+    icon: "🧾",
+    cor: "#b45309",
+    bg: "#fffbeb",
+    desc: "Gestão completa da receita própria municipal: lançamento, arrecadação, fiscalização e cobrança de todos os tributos.",
+    submodulos: [
+      { nome: "Arrecadação (IPTU, ISS, ITBI, Taxas)", sigla: "ARR",      desc: "Lançamento, cálculo e cobrança de tributos municipais." },
+      { nome: "Nota Fiscal de Serviços Eletrônica",  sigla: "NFS-e",      desc: "Emissão e gestão de NFS-e conforme padrão nacional." },
+      { nome: "Escrita Fiscal e ISS Bancos",          sigla: "EFE",       desc: "Declarações de serviço, ISS retido e ISS de instituições financeiras." },
+      { nome: "Simples Nacional",                     sigla: "SN",        desc: "Gestão tributária de MEI, ME e EPP optantes." },
+      { nome: "Fiscalização Fazendária",              sigla: "FISC",      desc: "Ordens de fiscalização, autos de infração e PAT." },
+      { nome: "Dívida Ativa",                         sigla: "DA",        desc: "Inscrição, CDA, parcelamento e execução fiscal." },
+      { nome: "Domicílio Eletrônico",                 sigla: "DE",        desc: "Canal oficial de notificação fiscal com validade jurídica." },
+    ]
+  },
+  {
+    id: "CTRL",
+    area: "Módulo Controladoria e Transparência",
+    icon: "🔍",
+    cor: "#7c3aed",
+    bg: "#f5f3ff",
+    desc: "Controle interno, processo digital, documentos e transparência pública. Eixo de governança e conformidade.",
+    submodulos: [
+      { nome: "Portal da Transparência",            sigla: "TRANSP",      desc: "Transparência ativa e passiva conforme LC 131/2009 e LAI." },
+      { nome: "Processo Digital",                   sigla: "PD",          desc: "Tramitação eletrônica de processos administrativos com assinatura digital." },
+      { nome: "Gestão Eletrônica de Documentos",    sigla: "GED",         desc: "Repositório documental com OCR, versionamento e e-ARQ Brasil." },
+      { nome: "Ouvidoria",                          sigla: "OUV",         desc: "Manifestações do cidadão e integração com e-OUV/CGU." },
+      { nome: "Procuradoria Municipal",             sigla: "PROC",        desc: "Processos judiciais, pareceres jurídicos e precatórios." },
+    ]
+  },
+  {
+    id: "CID",
+    area: "Módulo Cidadão Digital",
+    icon: "📱",
+    cor: "#0369a1",
+    bg: "#f0f9ff",
+    desc: "Interface digital entre prefeitura e cidadão: portal web, aplicativo mobile e serviços online.",
+    submodulos: [
+      { nome: "Portal de Serviços e Autoatendimento", sigla: "e-GOV",    desc: "Catálogo de serviços, solicitações e certidões online via Gov.br." },
+      { nome: "Aplicativo Mobile (Android / iOS)",    sigla: "APP",      desc: "App oficial da prefeitura com push, geolocalização e pagamentos." },
+      { nome: "Serviços Públicos Urbanos",            sigla: "OS",       desc: "Ordens de serviço georreferenciadas para equipes de campo." },
+    ]
+  },
+  {
+    id: "SAUDE",
+    area: "Módulo Saúde",
+    icon: "🏥",
+    cor: "#0f766e",
+    bg: "#f0fdfa",
+    desc: "Gestão da saúde pública municipal: atenção básica, vigilância, farmácia e integração com o SUS.",
+    submodulos: [
+      { nome: "Gestão de UBS e Atenção Básica",     sigla: "SISAB",      desc: "Cadastro de unidades, agenda, produção ambulatorial e envio ao SISAB." },
+      { nome: "Regulação e Marcação de Consultas",  sigla: "REG",        desc: "Fila de espera, encaminhamentos e referência/contrarreferência." },
+      { nome: "Farmácia Municipal",                 sigla: "FARM",       desc: "Estoque de medicamentos, dispensação e controle de validade." },
+      { nome: "Vigilância em Saúde",                sigla: "VIG",        desc: "Notificação de agravos, surtos e campanhas de vacinação." },
+    ]
+  },
+  {
+    id: "EDU",
+    area: "Módulo Educação",
+    icon: "📚",
+    cor: "#0369a1",
+    bg: "#e0f2fe",
+    desc: "Gestão da rede municipal de ensino: escolas, matrículas, merenda, transporte escolar e FUNDEB.",
+    submodulos: [
+      { nome: "Gestão Escolar",                     sigla: "CENSO",      desc: "Cadastro de escolas, turmas, matrículas e frequência." },
+      { nome: "Merenda Escolar",                    sigla: "PNAE",       desc: "Cardápio, fornecedores e prestação de contas do PNAE." },
+      { nome: "Transporte Escolar",                 sigla: "TE",         desc: "Rotas, veículos, alunos transportados e contratos." },
+      { nome: "FUNDEB e Prestação de Contas",       sigla: "SIOPE",      desc: "Controle de gastos vinculados ao FUNDEB e envio ao SIOPE." },
+    ]
+  },
+  {
+    id: "ASSOC",
+    area: "Módulo Assistência Social",
+    icon: "🤝",
+    cor: "#9d174d",
+    bg: "#fdf2f8",
+    desc: "Gestão da política municipal de assistência social, proteção de vulneráveis e integração com o SUAS.",
+    submodulos: [
+      { nome: "Ficha do Cidadão",                   sigla: "FC",         desc: "Cadastro unificado do cidadão: dados, histórico, vínculos e vulnerabilidades." },
+      { nome: "CRAS e Proteção Social Básica",      sigla: "SUAS",       desc: "Atendimentos, encaminhamentos e serviços do CRAS." },
+      { nome: "Benefícios Municipais",              sigla: "BEN",        desc: "Concessão, controle e cancelamento de benefícios municipais." },
+      { nome: "CadÚnico Municipal",                 sigla: "CAD",        desc: "Gestão local do Cadastro Único e integração com o MDS." },
+    ]
+  },
+  {
+    id: "MA",
+    area: "Módulo Meio Ambiente",
+    icon: "🌿",
+    cor: "#15803d",
+    bg: "#f0fdf4",
+    desc: "Gestão ambiental municipal: licenciamento, fiscalização, monitoramento e integração com IBAMA e SISNAMA.",
+    submodulos: [
+      { nome: "Licenciamento Ambiental",            sigla: "LAP/LAI/LAO", desc: "Emissão de licenças ambientais e controle de prazos." },
+      { nome: "Fiscalização Ambiental",             sigla: "AIA",        desc: "Ordens de vistoria, autos de infração e PAT ambiental." },
+      { nome: "Monitoramento Ambiental",            sigla: "MON",        desc: "Qualidade da água, ar e arborização urbana." },
+    ]
+  },
+  {
+    id: "OBR",
+    area: "Módulo Obras, Trânsito e Frotas",
+    icon: "🏗",
+    cor: "#c2410c",
+    bg: "#fff7ed",
+    desc: "Gestão de obras públicas, licenciamento urbanístico, infraestrutura viária, trânsito e frota municipal.",
+    submodulos: [
+      { nome: "Obras e Contratos de Engenharia",    sigla: "OBR",        desc: "Acompanhamento de obras, medições, cronograma e contratos." },
+      { nome: "Licenciamento e Posturas",           sigla: "ALV",        desc: "Alvarás, habite-se, licenças de funcionamento e fiscalização urbana." },
+      { nome: "Transporte e Trânsito",              sigla: "CTB",        desc: "Concessões, licenciamento de veículos de aluguel e infraestrutura viária." },
+      { nome: "Controle de Frotas e Combustíveis",  sigla: "FR",         desc: "Frota municipal, manutenção, abastecimento e rastreamento GPS." },
+    ]
+  },
+];
+
+const entityCols = ["Município","IMMA","Turismo","Prev. Social","Esportes","Assist. Social","Educação","Saúde","FMDICA"];
+
+// Entity table — list macro modules
+const tbody = document.getElementById('entity-tbody');
+const entidadeMap = {
+  "FIN":   ["Município","IMMA","Turismo","Prev. Social","Esportes","Assist. Social","Educação","Saúde","FMDICA"],
+  "ADM":   ["Município","IMMA","Turismo","Prev. Social","Esportes"],
+  "TRIB":  ["Município"],
+  "CTRL":  ["Município","IMMA","Turismo","Prev. Social","Esportes"],
+  "CID":   ["Município"],
+  "SAUDE": ["Município"],
+  "EDU":   ["Município"],
+  "ASSOC": ["Município"],
+  "MA":    ["IMMA"],
+  "OBR":   ["Município"],
+};
+modulosMacro.forEach(m => {
+  const ents = entidadeMap[m.id] || [];
+  const tr = document.createElement('tr');
+  let html = `<td>${m.area.replace('Módulo ','')}</td>`;
+  entityCols.forEach(e => {
+    const has = ents.some(me => me === e || me.includes(e.split(' ')[0]) || e.includes(me.split(' ')[0]));
+    html += has ? `<td><span class="check">✓</span></td>` : `<td><span class="dash">–</span></td>`;
+  });
+  tr.innerHTML = html;
+  tbody.appendChild(tr);
+});
+
+// Render macro module cards
+const container = document.getElementById('modules-container');
+
+modulosMacro.forEach(macro => {
+  const group = document.createElement('div');
+  group.className = 'macro-card';
+  group.style.cssText = `border-left: 4px solid ${macro.cor}; background: ${macro.bg};`;
+
+  const subHtml = macro.submodulos.map(s => `
+    <div class="sub-item">
+      <div class="sub-header">
+        <span class="sub-sigla" style="background:${macro.cor}20; color:${macro.cor}">${s.sigla}</span>
+        <span class="sub-nome">${s.nome}</span>
+      </div>
+      <div class="sub-desc">${s.desc}</div>
+    </div>`).join('');
+
+  group.innerHTML = `
+    <div class="macro-top">
+      <div class="macro-icon" style="background:${macro.cor}18; color:${macro.cor}">${macro.icon}</div>
+      <div class="macro-info">
+        <div class="macro-id" style="color:${macro.cor}">${macro.id}</div>
+        <div class="macro-title" style="color:${macro.cor}">${macro.area}</div>
+        <div class="macro-desc">${macro.desc}</div>
+      </div>
+      <div class="macro-count" style="color:${macro.cor}">${macro.submodulos.length}<span>sub</span></div>
+    </div>
+    <div class="macro-divider" style="background:${macro.cor}22"></div>
+    <div class="sub-grid">${subHtml}</div>`;
+
+  container.appendChild(group);
+});
+
+function toggleAcc(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('fade-up'); observer.unobserve(e.target); }});
+}, { threshold: 0.06 });
+document.querySelectorAll('.macro-card, .roadmap-card, .int-item').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
